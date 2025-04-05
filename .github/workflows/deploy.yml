@@ -58,6 +58,6 @@ jobs:
           key_path: ~/.ssh/id_rsa
           script: |
             docker pull enyytime/health-api:latest
-            docker stop go-health-api || true
-            docker rm go-health-api || true
-            docker run -d --name go-health-api -p 80:8080 enyytime/health-api:latest
+            docker stop health-api || true
+            docker rm health-api || true
+            docker run -d --name health-api -p 80:8080 enyytime/health-api:latest
