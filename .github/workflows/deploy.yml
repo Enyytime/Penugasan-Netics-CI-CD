@@ -42,7 +42,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            docker pull enyytime/health-api:latest
-            docker stop health-api || true
-            docker rm health-api || true
-            docker run -d --name health-api -p 80:8080 enyytime/health-api:latest
+            sudo docker pull enyytime/health-api:latest
+            sudo docker stop health-api || true
+            sudo docker rm health-api || true
+            sudo docker run -d --name health-api -p 80:8080 enyytime/health-api:latest
