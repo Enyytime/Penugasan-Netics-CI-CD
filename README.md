@@ -1,3 +1,2 @@
 # Penugasan-Netics-CI-CD
-testtingssdsds
-asdasd
+pls ssh key work
