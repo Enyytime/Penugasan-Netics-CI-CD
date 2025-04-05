@@ -31,18 +31,33 @@ jobs:
           tags: enyytime/health-api:latest
 
   deploy:
-    name: Deploy to VPS
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: SSH Deploy to VPS
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script: |
-            docker pull enyytime/health-api:latest
-            docker stop health-api || true
-            docker rm health-api || true
-            docker run -d --name health-api -p 80:8080 enyytime/health-api:latest
+  name: Deploy to VPS
+  needs: build
+  runs-on: ubuntu-latest
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Install ssh-client
+      run: sudo apt-get update && sudo apt-get install -y openssh-client
+
+    - name: Write SSH key
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+
+    - name: Test SSH connectivity
+      run: ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} echo "SSH OK"
+
+    - name: SSH Deploy to VPS
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USER }}
+        key_path: ~/.ssh/id_rsa
+        script: |
+          docker pull your-dockerhub-username/go-health-api:latest
+          docker stop go-health-api || true
+          docker rm go-health-api || true
+          docker run -d --name go-health-api -p 80:8080 your-dockerhub-username/go-health-api:latest
