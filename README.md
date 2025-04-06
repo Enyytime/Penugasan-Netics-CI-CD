@@ -3,7 +3,8 @@
 
 # Laporan Penugasan Modul CI/CD  
 **Open Recruitment NETICS 2025**  
-**Author**: Iftala Zahri Sukmana  
+**Name**: Rogelio Kenny Arisandi
+**NRP**: 5025231074
 
 ---
 
