@@ -85,16 +85,171 @@ docker push enyytime/health-api:latest
 
 ### Berikut adalah Command yang di jalankan untuk pull image docker
 
-1. install docker di VPS
+1. Melakukan koneksi SSH dengan VPS
+- Copy IP ini untuk melakukan SSH
+![image](https://github.com/user-attachments/assets/4fbc4377-4394-4ea6-9925-74966ee44b0c)
+- Lakukan command ini
+![image](https://github.com/user-attachments/assets/a85ce7e1-9741-4647-88c0-770f9e90d2cf)
+
+
+2. install docker di VPS
 ```
 sudo apt update
 sudo apt install docker.io -y
 sudo usermod -aG docker $USER
 ```
-2. pull image dari docker hub kita
+3. pull image dari docker hub kita
 ```
 docker pull enyytime/health-api:latest
 docker run -d --name health-api -p 80:8080 enyytime/health-api:latest
 ```
 
+# 7. CI/CD
+- Buat directory `.github/workflows` lalu buat file `deploy.yml`
+```yml
+name: CI/CD Pipeline
 
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: enyytime/health-api:latest
+
+  deploy:
+    name: Deploy to VPS
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH Deploy to VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            sudo docker pull enyytime/health-api:latest
+            sudo docker stop health-api || true
+            sudo docker rm health-api || true
+            sudo docker run -d --name health-api -p 80:8080 enyytime/health-api:latest
+```
+
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: enyytime/health-api:latest
+
+  deploy:
+    name: Deploy to VPS
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH Deploy to VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            sudo docker pull enyytime/health-api:latest
+            sudo docker stop health-api || true
+            sudo docker rm health-api || true
+            sudo docker run -d --name health-api -p 80:8080 enyytime/health-api:latest
+
+### Penjelasan Kode
+
+#### 1. Build dan Push Docker Image ke Docker Hub
+
+Pada tahap ini, GitHub Actions akan:
+
+- Mengambil kode terbaru dari repository (actions/checkout@v3).
+- Menyiapkan Docker Buildx untuk membangun image.
+- Melakukan login ke Docker Hub menggunakan secrets yang telah disimpan di repository.
+- - Membangun image berdasarkan Dockerfile dan langsung mem-push ke Docker Hub.
+
+#### 2. Deploy ke VPS menggunakan SSH
+Pada tahap ini, setelah Docker image berhasil dipush ke Docker Hub, workflow akan:
+Menjalankan perintah:
+- Menarik (pull) image terbaru dari Docker Hub.
+
+- Menghentikan container lama (docker stop), jika ada.
+
+- Menghapus container lama (docker rm), jika ada.
+
+- Menjalankan container baru dengan port mapping 80:8080.
+
+### Isi Secrets di githuub actions
+
+DOCKER_USERNAME: Docker Hub username.
+
+DOCKER_PASSWORD: Docker Hub password.
+
+VPS_HOST: VPS public IP.
+
+VPS_USER: ubuntu.
+
+VPS_SSH_KEY: SSH private key (.pem in my case)
+
+# 8. Tes CI/CD
+Cara tes nya tinggal melakukan update lalu kita cek di github action
+
+
+![image](https://github.com/user-attachments/assets/a43a25e9-4bce-4615-a74e-beea25cd0051)
+
+
+
+![image](https://github.com/user-attachments/assets/e542aaa6-5e23-48a0-ba5d-aff9a3acfaf4)
+
+Penjelasan:
+Uptime nya pada saat `1743948946`, artinya ini di tanggal 6 april 14:15 UTC, ditambah 7 karena kita +7 jadinya jam 9. (nanya chatgpt karena gak bisa baca itu angkanya gimana)
