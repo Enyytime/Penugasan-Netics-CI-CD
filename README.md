@@ -17,7 +17,8 @@ Tugas ini mengimplementasikan modul CI/CD untuk sebuah API sederhana dengan endp
   "status": "UP",
   "timestamp": 1680301234,
   "uptime": 120
-}```
+}
+```
 
 Seluruh proses—mulai dari build, containerization, hingga deployment ke VPS—diotomasi menggunakan GitHub Actions.
 
